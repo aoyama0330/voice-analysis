@@ -21,10 +21,8 @@ body {
   display:flex; align-items:center; gap:14px;
   margin-bottom:36px; padding-bottom:20px; border-bottom:1px solid var(--border);
 }
-.header-logo {
-  width:48px; height:48px; background:linear-gradient(135deg,#111111,#3f3f46);
-  border-radius:12px; display:grid; place-items:center; font-size:24px; flex-shrink:0;
-}
+.header-logo { flex-shrink:0; display:flex; align-items:center; }
+.header-logo img { height:44px; width:auto; }
 .header-text h1 { font-size:22px; font-weight:700; }
 .header-text p  { font-size:15px; color:var(--text2); margin-top:2px; }
 
@@ -82,7 +80,7 @@ body {
 <body>
 
 <div class="header">
-  <div class="header-logo">🎤</div>
+  <div class="header-logo"><img src="logo.png" alt="Emotional Technologies"></div>
   <div class="header-text">
     <h1>歌声感情解析 – 分析一覧</h1>
     <p>登録された歌声の解析結果を一覧で確認できます</p>
