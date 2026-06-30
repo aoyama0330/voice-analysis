@@ -138,7 +138,7 @@ function render(items) {
     return;
   }
   el.innerHTML = items.map(item => `
-    <a class="entry-card" href="dashboard.html?data=${encodeURIComponent(item.url)}&name=${encodeURIComponent(item.name)}">
+    <a class="entry-card" href="dashboard.html?data=${encodeURIComponent(item.url)}&name=${encodeURIComponent(item.name)}${item.lyricsUrl ? '&lyrics=' + encodeURIComponent(item.lyricsUrl) : ''}">
       <div class="entry-name">${esc(item.name)}</div>
       <div class="entry-date">📅 ${esc(item.date)}</div>
       ${item.note ? `<div class="entry-note">💬 ${esc(item.note)}</div>` : ''}

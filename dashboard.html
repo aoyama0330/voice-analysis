@@ -1007,19 +1007,43 @@ function setupPlayerUI(id, el, data) {
 }
 
 // ==================== URL SHARE ====================
-async function loadFromUrl(url, namePrm) {
+async function loadFromUrl(url, namePrm, lyricsUrl) {
   const overlay = document.getElementById('loadOverlay');
   overlay.style.display = 'flex';
-  const tryFetch = u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+  const tryText = async u => { const r = await fetch(u); if (!r.ok) throw new Error(r.status); return r.text(); };
+  const tryJson = async u => JSON.parse(await tryText(u));
+  const fetchWithProxy = async (u, asJson) => {
+    try { return asJson ? await tryJson(u) : await tryText(u); }
+    catch { return asJson ? await tryJson(`https://corsproxy.io/?url=${encodeURIComponent(u)}`) : await tryText(`https://corsproxy.io/?url=${encodeURIComponent(u)}`); }
+  };
   try {
-    let json;
-    try { json = await tryFetch(url); }
-    catch { json = await tryFetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`); }
-    dataA = json;
+    dataA = await fetchWithProxy(url, true);
     nameA = namePrm || '歌手A';
+
+    if (lyricsUrl) {
+      try {
+        const lrc = await fetchWithProxy(lyricsUrl, false);
+        lyricsData = parseLRC(lrc);
+        const ta = document.getElementById('lyricsPaste');
+        if (ta) ta.value = lrc;
+        const cnt = document.getElementById('lyricsCount');
+        if (cnt) cnt.textContent = lyricsData.length ? `${lyricsData.length} 行を読み込みました` : '';
+      } catch { /* 歌詞失敗は無視 */ }
+    }
+
     renderAll();
+
+    if (lyricsData.length) {
+      const row = document.getElementById('lyricsOffsetRow');
+      if (row) row.style.display = 'flex';
+    }
+
     const btn = document.getElementById('shareBtn');
-    if (btn) { btn.classList.add('visible'); btn.dataset.sourceUrl = url; }
+    if (btn) {
+      btn.classList.add('visible');
+      btn.dataset.sourceUrl = url;
+      if (lyricsUrl) btn.dataset.lyricsUrl = lyricsUrl;
+    }
   } catch {
     alert('データを読み込めませんでした。URLとGistの公開設定を確認してください。');
   } finally {
@@ -1031,10 +1055,14 @@ function generateShareUrl() {
   const btn = document.getElementById('shareBtn');
   const sourceUrl = btn && btn.dataset.sourceUrl;
   if (!sourceUrl) {
-    alert('共有リンクを生成するには、まずJSONファイルをGitHub Gistに公開し、そのRaw URLを ?data= パラメータで開いてください。\n\n手順はダッシュボードの説明をご確認ください。');
+    alert('共有リンクを生成するには、まずJSONファイルをGitHub Gistに公開し、そのRaw URLを ?data= パラメータで開いてください。');
     return;
   }
-  const share = `${location.origin}${location.pathname}?data=${encodeURIComponent(sourceUrl)}&name=${encodeURIComponent(nameA)}`;
+  const base = location.pathname.endsWith('dashboard.html')
+    ? location.href.split('?')[0]
+    : location.origin + location.pathname.replace(/\/?$/, '/') + 'dashboard.html';
+  const lyricsParam = btn.dataset.lyricsUrl ? `&lyrics=${encodeURIComponent(btn.dataset.lyricsUrl)}` : '';
+  const share = `${base}?data=${encodeURIComponent(sourceUrl)}&name=${encodeURIComponent(nameA)}${lyricsParam}`;
   navigator.clipboard.writeText(share).then(() => {
     const orig = btn.textContent;
     btn.textContent = '✓ コピーしました！';
@@ -1048,7 +1076,8 @@ function generateShareUrl() {
   const dataUrl = p.get('data');
   if (dataUrl) {
     const name = p.get('name') ? decodeURIComponent(p.get('name')) : '歌手A';
-    loadFromUrl(decodeURIComponent(dataUrl), name);
+    const lyricsUrl = p.get('lyrics') ? decodeURIComponent(p.get('lyrics')) : null;
+    loadFromUrl(decodeURIComponent(dataUrl), name, lyricsUrl);
   }
 })();
 </script>
