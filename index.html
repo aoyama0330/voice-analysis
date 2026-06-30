@@ -3,1054 +3,153 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>歌声感情解析 分析ダッシュボード（簡易版）</title>
+<title>歌声感情解析 – 分析一覧</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing:border-box; margin:0; padding:0; }
 :root {
-  --bg: #f2f2f4; --card: #ffffff; --card2: #ebebec;
-  --border: #e0e0e0; --text: #111111; --text2: #555555; --text3: #a0a0a0;
-  --sp: #1a1a1a; --pos: #2d7d52; --neg: #2257c5; --sn: #c0392b;
-  --acc-a: #111111; --acc-b: #6b7280;
+  --bg:#f2f2f4; --card:#ffffff; --card2:#ebebec;
+  --border:#e0e0e0; --text:#111111; --text2:#555555; --text3:#a0a0a0;
 }
 body {
-  font-family: 'M PLUS 1', -apple-system, 'Hiragino Kaku Gothic ProN', 'Yu Gothic Medium', sans-serif;
-  background: var(--bg); color: var(--text); min-height: 100vh; padding: 28px;
+  font-family:'M PLUS 1',-apple-system,'Hiragino Kaku Gothic ProN',sans-serif;
+  background:var(--bg); color:var(--text); min-height:100vh; padding:28px;
 }
-
-/* ---- HEADER ---- */
-.header { display:flex; align-items:center; gap:14px; margin-bottom:28px; padding-bottom:20px; border-bottom:1px solid var(--border); }
-.header-logo { width:48px; height:48px; background:linear-gradient(135deg,#111111,#3f3f46); border-radius:12px; display:grid; place-items:center; font-size:24px; flex-shrink:0; }
+.header {
+  display:flex; align-items:center; gap:14px;
+  margin-bottom:36px; padding-bottom:20px; border-bottom:1px solid var(--border);
+}
+.header-logo {
+  width:48px; height:48px; background:linear-gradient(135deg,#111111,#3f3f46);
+  border-radius:12px; display:grid; place-items:center; font-size:24px; flex-shrink:0;
+}
 .header-text h1 { font-size:22px; font-weight:700; }
 .header-text p  { font-size:15px; color:var(--text2); margin-top:2px; }
 
-/* ---- UPLOAD ---- */
-.upload-section {
-  display: grid;
-  grid-template-columns: 1fr 48px 1fr;
-  gap: 16px;
-  align-items: center;
-  margin-bottom: 28px;
+.section-title {
+  font-size:13px; font-weight:700; color:var(--text3);
+  text-transform:uppercase; letter-spacing:.8px; margin-bottom:16px;
 }
-.upload-group-label {
-  font-size: 14px; font-weight: 700; color: var(--text3);
-  text-transform: uppercase; letter-spacing: 1px;
-  margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+.grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:14px; margin-bottom:40px;
 }
-.upload-group-label .singer-dot {
-  width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+.entry-card {
+  display:block; text-decoration:none; color:inherit;
+  background:var(--card); border:1px solid var(--border); border-radius:14px;
+  padding:22px; box-shadow:0 1px 4px rgba(0,0,0,.06);
+  transition:box-shadow .15s, border-color .15s, transform .15s;
 }
-.opt-tag { font-size: 12px; font-weight: 400; color: var(--text3); background: var(--card2); padding: 2px 7px; border-radius: 4px; text-transform: none; letter-spacing: 0; }
-.upload-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.vs-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; padding-top: 24px; }
-.vs-line { width: 1px; height: 32px; background: linear-gradient(to bottom, transparent, var(--border)); }
-.vs-text { font-size: 15px; font-weight: 800; color: var(--text3); letter-spacing: 2px; }
-
-.drop-zone {
-  border: 2px dashed var(--border); border-radius: 12px;
-  padding: 18px 14px; text-align: center; cursor: pointer;
-  background: var(--card); transition: border-color .2s, background .2s;
-  position: relative; overflow: hidden; min-height: 100px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+.entry-card:hover {
+  box-shadow:0 4px 16px rgba(0,0,0,.1);
+  border-color:#aaaaaa; transform:translateY(-2px);
 }
-.drop-zone:hover,.drop-zone.over { border-color: var(--acc-a); background: #f0f0f2; }
-.drop-zone.done-a { border-color: var(--acc-a); border-style: solid; }
-.drop-zone.done-b { border-color: var(--acc-b); border-style: solid; }
-.drop-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; z-index:1; }
-.drop-icon { font-size:28px; margin-bottom:6px; }
-.drop-title { font-size:15px; font-weight:600; margin-bottom:2px; }
-.drop-sub   { font-size:13px; color:var(--text2); }
-.drop-loaded { display:none; margin-top:8px; font-size:13px; border-radius:5px; padding:4px 8px; }
-.drop-zone.done-a .drop-loaded { display:block; color:#111111; background:rgba(17,17,17,.06); border:1px solid rgba(17,17,17,.2); }
-.drop-zone.done-b .drop-loaded { display:block; color:#4b5563; background:rgba(107,114,128,.06); border:1px solid rgba(107,114,128,.2); }
+.entry-name { font-size:17px; font-weight:700; margin-bottom:8px; }
+.entry-date { font-size:13px; color:var(--text3); margin-bottom:6px; }
+.entry-note { font-size:14px; color:var(--text2); margin-top:4px; }
+.entry-arrow { margin-top:16px; font-size:13px; color:var(--text3); }
 
-/* ---- DASHBOARD ---- */
-#dashboard { display:none; }
-#dashboard.on { display:block; }
-.gap { margin-bottom:14px; }
-.card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:22px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
-.card-title { font-size:13px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.8px; margin-bottom:16px; }
+.empty-state { text-align:center; padding:60px 20px; color:var(--text3); grid-column:1/-1; }
+.empty-state .empty-icon { font-size:48px; margin-bottom:16px; }
+.empty-state p { font-size:15px; line-height:1.8; }
 
-/* ---- TOP ROW ---- */
-.top-row-single { display:grid; grid-template-columns:290px 1fr 260px; gap:14px; margin-bottom:14px; }
-.top-row-comp   { display:grid; grid-template-columns:1fr 280px 1fr;   gap:14px; margin-bottom:14px; }
-
-/* ---- TYPE CARD ---- */
-.type-wrap { text-align:center; }
-.type-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; font-size:13px; font-weight:600; margin-bottom:12px; }
-.type-icon { font-size:52px; line-height:1; margin-bottom:8px; }
-.type-name { font-size:21px; font-weight:700; margin-bottom:6px; }
-.type-desc { font-size:14px; color:var(--text2); line-height:1.7; margin-bottom:12px; }
-.traits { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; }
-.trait { padding:4px 10px; border-radius:6px; font-size:13px; font-weight:500; }
-
-/* ---- STATS ---- */
-.stat-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
-.stat-row:last-child { border-bottom:none; }
-.stat-label { font-size:14px; color:var(--text2); }
-.stat-val   { font-size:15px; font-weight:600; }
-
-/* ---- COMPARISON STATS ---- */
-.comp-stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 0;
+.how-to {
+  background:var(--card); border:1px solid var(--border); border-radius:14px;
+  padding:24px; box-shadow:0 1px 4px rgba(0,0,0,.06);
 }
-.comp-stats-col { display:flex; flex-direction:column; gap:0; }
-.comp-stats-header { font-size:14px; font-weight:700; padding:8px 0; text-align:center; border-bottom:1px solid var(--border); margin-bottom:4px; }
-.comp-stat-row { display:flex; justify-content:center; align-items:center; padding:10px 4px; border-bottom:1px solid var(--border); font-size:15px; font-weight:600; text-align:center; }
-.comp-stat-label { font-size:13px; color:var(--text2); display:flex; align-items:center; justify-content:center; text-align:center; }
-.comp-stat-row:last-child { border-bottom:none; }
+.how-to h2 { font-size:15px; font-weight:700; margin-bottom:16px; }
+.steps { display:flex; flex-direction:column; gap:14px; }
+.step { display:flex; gap:12px; align-items:flex-start; }
+.step-num {
+  width:24px; height:24px; border-radius:50%; background:var(--text); color:#fff;
+  display:grid; place-items:center; font-size:12px; font-weight:700; flex-shrink:0; margin-top:2px;
+}
+.step-body { font-size:14px; color:var(--text2); line-height:1.8; }
+.step-body code {
+  background:var(--card2); padding:2px 7px; border-radius:4px;
+  font-size:12px; color:var(--text); font-family:monospace; word-break:break-all;
+}
+.error-msg { color:#c0392b; font-size:14px; padding:20px; grid-column:1/-1; }
 
-/* ---- RADAR ---- */
-.radar-wrap { position:relative; height:220px; }
-
-/* ---- TIMELINE ---- */
-.timeline-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-.timeline-title  { font-size:17px; font-weight:700; }
-.timeline-hint   { font-size:13px; color:var(--text3); }
-.tgl-row { display:flex; gap:6px; margin-bottom:12px; }
-.tgl-btn {
-  display:inline-flex; align-items:center; gap:5px;
-  padding:6px 14px; border-radius:999px; font-size:14px; font-weight:500;
-  border:1px solid var(--border); background:var(--card2); color:var(--text2);
-  cursor:pointer; transition:all .15s;
-}
-.tgl-btn:hover { color:var(--text); border-color:var(--text3); }
-.tgl-btn.act-both { border-color:rgba(17,17,17,.35); background:rgba(17,17,17,.07); color:var(--text); }
-.tgl-btn.act-a    { border-color:rgba(17,17,17,.55); background:rgba(17,17,17,.09); color:#111111; }
-.tgl-btn.act-b    { border-color:rgba(107,114,128,.5); background:rgba(107,114,128,.09); color:#4b5563; }
-.tgl-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-.chart-wrap { position:relative; height:220px; cursor:crosshair; }
-.chart-wrap-sm { height:155px; }
-.timeline-singer-label { font-size:13px; font-weight:700; margin-bottom:4px; margin-top:10px; color:var(--text2); }
-
-/* ---- LYRICS ---- */
-.lyrics-input-wrap { margin-bottom:24px; }
-.lyrics-ta {
-  width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:10px;
-  font-family:inherit; font-size:13px; color:var(--text2); background:var(--card);
-  resize:vertical; min-height:70px; line-height:1.7;
-  box-shadow:0 1px 3px rgba(0,0,0,.04); transition:border-color .15s;
-}
-.lyrics-ta:focus { outline:none; border-color:var(--acc-a); }
-.lyrics-count { font-size:12px; color:var(--text3); margin-top:5px; text-align:right; }
-.lyrics-offset-row { display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
-.lyrics-offset-label { font-size:12px; color:var(--text2); }
-.offset-btn { padding:3px 10px; font-size:12px; border:1px solid var(--border); border-radius:6px; background:var(--card2); color:var(--text); cursor:pointer; }
-.offset-btn:hover { background:var(--border); }
-.offset-val { font-size:13px; font-weight:600; color:var(--acc-a); min-width:48px; text-align:center; }
-.offset-hint { font-size:11px; color:var(--text3); }
-.lyrics-panel { text-align:center; display:flex; flex-direction:column; justify-content:center; gap:4px; padding:18px 24px; min-height:90px; }
-.lyric-ctx { font-size:14px; color:var(--text3); line-height:1.9; min-height:22px; transition:opacity .25s; }
-.lyric-cur { font-size:19px; font-weight:700; color:var(--text); line-height:1.6; min-height:30px; transition:all .25s; }
-.legend-row { display:flex; gap:16px; margin-top:10px; flex-wrap:wrap; }
-
-/* ---- SHARE ---- */
-.share-btn {
-  margin-left:auto; flex-shrink:0;
-  display:none; align-items:center; gap:6px;
-  padding:8px 16px; border-radius:999px; font-size:14px; font-weight:600;
-  border:1.5px solid var(--border); background:var(--card); color:var(--text);
-  cursor:pointer; white-space:nowrap; transition:all .15s;
-}
-.share-btn:hover { background:var(--text); color:#fff; border-color:var(--text); }
-.share-btn.visible { display:inline-flex; }
-.load-overlay {
-  display:none; position:fixed; inset:0; background:rgba(255,255,255,.75);
-  z-index:999; align-items:center; justify-content:center; flex-direction:column; gap:12px;
-}
-.load-spinner {
-  width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--text);
-  border-radius:50%; animation:spin .7s linear infinite;
-}
-.load-msg { font-size:14px; color:var(--text2); }
-@keyframes spin { to { transform:rotate(360deg); } }
-.leg-item { display:flex; align-items:center; gap:5px; font-size:13px; color:var(--text2); }
-.leg-dot  { width:9px; height:9px; border-radius:2px; }
-.leg-line { width:18px; height:3px; border-radius:2px; }
-
-/* ---- EVENTS ---- */
-.events-grid { display:flex; flex-wrap:wrap; gap:6px; }
-.events-comp { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-.events-col-label { font-size:13px; font-weight:700; margin-bottom:8px; }
-.event-chip {
-  display:inline-flex; align-items:center; gap:4px;
-  padding:5px 11px; border-radius:999px; font-size:14px;
-  cursor:pointer; transition:opacity .15s; border:1px solid transparent;
-}
-.event-chip:hover { opacity:.7; }
-.event-time { font-size:12px; opacity:.65; }
-
-/* ---- PLAYER ---- */
-.players-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
-.players-row.single { grid-template-columns:1fr; }
-.player-file { font-size:15px; font-weight:500; color:var(--text2); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-.player-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.player-body { display:flex; align-items:center; gap:12px; }
-.play-btn {
-  width:44px; height:44px; border-radius:50%; border:none; cursor:pointer;
-  font-size:17px; color:#fff; display:grid; place-items:center;
-  flex-shrink:0; transition:opacity .15s;
-}
-.play-btn:hover { opacity:.85; }
-.play-btn:disabled { opacity:.3; cursor:default; }
-.progress-wrap { flex:1; }
-.prog-bg { height:5px; background:var(--card2); border-radius:3px; cursor:pointer; }
-.prog-fg { height:100%; border-radius:3px; width:0; pointer-events:none; }
-.prog-times { display:flex; justify-content:space-between; font-size:13px; color:var(--text3); margin-top:4px; }
-audio { display:none; }
-
-@media(max-width:960px) {
-  .top-row-single,.top-row-comp { grid-template-columns:1fr; }
-  .upload-section { grid-template-columns:1fr; }
-  .vs-col { display:none; }
-  .comp-stats-grid { grid-template-columns:auto 1fr 1fr; }
-  .players-row { grid-template-columns:1fr; }
-}
 @media(max-width:640px) {
   body { padding:14px; }
-  .upload-pair { grid-template-columns:1fr; }
-  .events-comp { grid-template-columns:1fr; }
+  .grid { grid-template-columns:1fr; }
 }
 </style>
 </head>
 <body>
 
-<div class="load-overlay" id="loadOverlay">
-  <div class="load-spinner"></div>
-  <div class="load-msg">データを読み込んでいます...</div>
-</div>
-
 <div class="header">
   <div class="header-logo">🎤</div>
   <div class="header-text">
-    <h1>歌声感情解析 分析ダッシュボード（簡易版）</h1>
-    <p>音声をKDE感情モデルで解析し結果を簡易的に表示します。２つの歌声の比較も可能です。</p>
+    <h1>歌声感情解析 – 分析一覧</h1>
+    <p>登録された歌声の解析結果を一覧で確認できます</p>
   </div>
-  <button class="share-btn" id="shareBtn" onclick="generateShareUrl()">🔗 共有リンクをコピー</button>
 </div>
 
-<div class="upload-section">
-  <div>
-    <div class="upload-group-label">
-      <span class="singer-dot" style="background:var(--acc-a)"></span>歌手 A
-    </div>
-    <div class="upload-pair">
-      <div class="drop-zone" id="jsonZoneA">
-        <input type="file" id="jsonInputA" accept=".json">
-        <div class="drop-icon">📊</div>
-        <div class="drop-title">解析 JSON</div>
-        <div class="drop-sub">クリック or ドロップ</div>
-        <div class="drop-loaded" id="jsonLoadedA"></div>
-      </div>
-      <div class="drop-zone" id="audioZoneA">
-        <input type="file" id="audioInputA" accept=".wav,.mp3,.m4a,.ogg">
-        <div class="drop-icon">🎵</div>
-        <div class="drop-title">音声ファイル</div>
-        <div class="drop-sub">WAV / MP3</div>
-        <div class="drop-loaded" id="audioLoadedA"></div>
-      </div>
-    </div>
-  </div>
+<div class="section-title">分析済み一覧</div>
+<div class="grid" id="gallery">
+  <div style="color:var(--text3);font-size:14px;padding:20px">読み込み中...</div>
+</div>
 
-  <div class="vs-col">
-    <div class="vs-line"></div>
-    <div class="vs-text">VS</div>
-    <div class="vs-line"></div>
-  </div>
-
-  <div>
-    <div class="upload-group-label">
-      <span class="singer-dot" style="background:var(--acc-b)"></span>歌手 B
-      <span class="opt-tag">比較用・任意</span>
-    </div>
-    <div class="upload-pair">
-      <div class="drop-zone" id="jsonZoneB">
-        <input type="file" id="jsonInputB" accept=".json">
-        <div class="drop-icon">📊</div>
-        <div class="drop-title">解析 JSON</div>
-        <div class="drop-sub">クリック or ドロップ</div>
-        <div class="drop-loaded" id="jsonLoadedB"></div>
+<div class="how-to">
+  <h2>新しい解析結果を追加するには</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        JSONファイルを <strong><a href="https://gist.github.com" target="_blank">gist.github.com</a></strong> にアップロードし、<strong>Raw</strong> ボタンのURLをコピーする
       </div>
-      <div class="drop-zone" id="audioZoneB">
-        <input type="file" id="audioInputB" accept=".wav,.mp3,.m4a,.ogg">
-        <div class="drop-icon">🎵</div>
-        <div class="drop-title">音声ファイル</div>
-        <div class="drop-sub">WAV / MP3</div>
-        <div class="drop-loaded" id="audioLoadedB"></div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        GitHubの <strong>voice-analysis</strong> リポジトリで <code>gallery.json</code> を開いて編集し、以下の形式で1件追加して保存する<br><br>
+        <code>{ "name": "〇〇さん", "date": "2026-07-01", "url": "（RawのURL）", "note": "メモ" }</code>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        このページを再読み込みすると一覧に反映されます
       </div>
     </div>
   </div>
 </div>
-
-<div class="lyrics-input-wrap">
-  <div class="upload-group-label" style="margin-bottom:8px">🎤 歌詞テキスト <span class="opt-tag">任意 · LRC形式で貼り付け</span></div>
-  <textarea id="lyricsPaste" class="lyrics-ta" rows="3" placeholder="[00:09.67] 君を泣かすから だから一緒には居れないな&#10;[00:14.08] 君を泣かすから 早く忘れて欲しいんだ&#10;..."></textarea>
-  <div id="lyricsCount" class="lyrics-count"></div>
-  <div class="lyrics-offset-row" id="lyricsOffsetRow" style="display:none">
-    <span class="lyrics-offset-label">表示タイミング補正</span>
-    <button class="offset-btn" onclick="adjustLyricsOffset(-0.5)">−0.5秒</button>
-    <span id="lyricsOffsetDisplay" class="offset-val">0.0秒</span>
-    <button class="offset-btn" onclick="adjustLyricsOffset(+0.5)">＋0.5秒</button>
-    <span class="offset-hint">＋で歌詞を遅らせる</span>
-  </div>
-</div>
-
-<div id="dashboard">
-  <!-- Populated by JS -->
-</div>
-
-<audio id="audioElA"></audio>
-<audio id="audioElB"></audio>
 
 <script>
-// ==================== CONSTANTS ====================
-const GROUPS = {
-  joy:       { label:'喜び・高揚',  color:'#f59e0b', bg:'rgba(245,158,11,.14)', border:'rgba(245,158,11,.4)',
-    emotions:['嬉しい','楽しい','満足','頼もしい','心地よい','楽観','可愛い','安心','期待','熱狂'] },
-  love:      { label:'愛情・切なさ', color:'#ec4899', bg:'rgba(236,72,153,.14)', border:'rgba(236,72,153,.4)',
-    emotions:['愛しい','やさしい','崇拝','敬意','羨望','好感','賛美','信念','陶酔','渇望'] },
-  melancholy:{ label:'哀愁・深み',  color:'#6366f1', bg:'rgba(99,102,241,.14)', border:'rgba(99,102,241,.4)',
-    emotions:['悔しい','苦しい','つらい','憂鬱','戸惑い','困惑','冷静','不安','不信','嫉妬'] },
-  passion:   { label:'激情・力強さ', color:'#ef4444', bg:'rgba(239,68,68,.14)',  border:'rgba(239,68,68,.4)',
-    emotions:['苛立たしい','憎い','侮蔑','恨めしい','パニック','恐怖','脅威','怪しい','不快','軽蔑'] },
-};
-
-const RADAR_LABELS = ['明るさ','感情移入度','感情の幅','情熱度','奥深さ','多彩さ'];
-const RADAR_DESC   = ['明るい感情の割合','感情が検出された割合','スコアの振れ幅','強い感情の割合','深みのある感情の割合','感情種類の豊かさ'];
-
-const SINGER_TYPES = [
-  { id:'bright',     name:'ブライトシンガー',      icon:'☀️', color:'#fbbf24',
-    desc:'輝くような喜びと活力に満ちた歌声。ポジティブなエネルギーが聴く人を明るい気持ちにさせます。',
-    traits:['明るい','エネルギッシュ','幸福感'] },
-  { id:'lyrical',    name:'リリカルシンガー',       icon:'🌸', color:'#f472b6',
-    desc:'繊細で温かみのある感情表現が特徴。やさしさと心地よさが自然に滲み出る歌声です。',
-    traits:['繊細','温かみ','やさしい'] },
-  { id:'emotional',  name:'エモーショナルシンガー', icon:'💫', color:'#a78bfa',
-    desc:'喜びや哀しみを豊かに表現する感情表現力の高い歌声。聴き手の心に深く響きます。',
-    traits:['表現豊か','多彩','共感力高'] },
-  { id:'melancholic',name:'メランコリックシンガー', icon:'🌙', color:'#60a5fa',
-    desc:'哀愁と深みのある感情世界を持つ歌声。切なさや郷愁が聴く人の胸に刺さります。',
-    traits:['哀愁','深み','感情的'] },
-  { id:'dramatic',   name:'ドラマティックシンガー', icon:'🎭', color:'#fb923c',
-    desc:'激しい感情の起伏を持つ劇的な歌声。喜怒哀楽のダイナミックな表現が圧倒的な存在感を放ちます。',
-    traits:['激情的','ダイナミック','存在感'] },
-  { id:'cool',       name:'クールシンガー',         icon:'❄️', color:'#67e8f9',
-    desc:'感情を抑えた洗練された歌声。クールな表現の中に秘めた深みがあります。',
-    traits:['クール','洗練','ミステリアス'] },
-  { id:'passionate', name:'パッショネートシンガー', icon:'🔥', color:'#ef4444',
-    desc:'激しい情熱と強烈な感情エネルギーを持つ歌声。圧倒的な熱量で聴く人を引き込みます。',
-    traits:['情熱的','力強い','圧倒的'] },
-];
-
-// ==================== STATE ====================
-let dataA = null, dataB = null;
-let lyricsData = [];
-let lyricsOffset = 0;
-let nameA = '歌手A', nameB = '歌手B';
-let charts = {};
-let timeA = 0, timeB = 0;
-let lastActive = 'A';
-
-const audioElA = document.getElementById('audioElA');
-const audioElB = document.getElementById('audioElB');
-
-// ==================== UTILS ====================
-function getGroup(name) {
-  if (!name || name === '-') return null;
-  for (const [key, g] of Object.entries(GROUPS)) {
-    if (g.emotions.includes(name)) return { key, ...g };
-  }
-  return null;
-}
-
-function fmt(s) {
-  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
-  return `${m}:${sec.toString().padStart(2,'0')}`;
-}
-
-function hexRgb(hex) {
-  return [1,3,5].map(i => parseInt(hex.slice(i,i+2),16)).join(',');
-}
-
-function mkChart(name, ...args) {
-  if (charts[name]) { charts[name].destroy(); }
-  charts[name] = new Chart(...args);
-  return charts[name];
-}
-
-// ==================== ANALYSIS ====================
-function getGroup2(name) { return getGroup(name); }
-
-function classifyType(data) {
-  const ems = data.emotion_name.filter(e => e && e !== '-');
-  const d = ems.length, tot = data.emotion_name.length;
-  if (d === 0 || d / tot < 0.04) return SINGER_TYPES.find(t => t.id === 'cool');
-  let joy=0, love=0, mel=0, pas=0;
-  ems.forEach(e => {
-    const g = getGroup(e); if (!g) return;
-    if (g.key==='joy')        joy++;
-    else if (g.key==='love')  love++;
-    else if (g.key==='melancholy') mel++;
-    else if (g.key==='passion')    pas++;
+fetch('gallery.json?_=' + Date.now())
+  .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+  .then(render)
+  .catch(() => {
+    document.getElementById('gallery').innerHTML =
+      '<div class="error-msg">gallery.jsonを読み込めませんでした。</div>';
   });
-  const max = Math.max(joy, love, mel, pas);
-  if (max/d >= 0.38) {
-    if (max === joy)  return SINGER_TYPES.find(t=>t.id==='bright');
-    if (max === love) return SINGER_TYPES.find(t=>t.id==='lyrical');
-    if (max === mel)  return SINGER_TYPES.find(t=>t.id==='melancholic');
-    if (max === pas)  return SINGER_TYPES.find(t=>t.id==='passionate');
-  }
-  if ((joy+pas)/d > 0.5) return SINGER_TYPES.find(t=>t.id==='dramatic');
-  return SINGER_TYPES.find(t=>t.id==='emotional');
-}
 
-function computeRadar(data) {
-  const ems = data.emotion_name.filter(e => e && e !== '-');
-  const total = data.emotion_name.length;
-  const d = ems.length;
-  if (d === 0) return [0, 0, 0, 0, 0, 0];
-  let joy=0, love=0, mel=0, pas=0;
-  ems.forEach(e => {
-    const g = getGroup(e); if (!g) return;
-    if (g.key==='joy')        joy++;
-    else if (g.key==='love')  love++;
-    else if (g.key==='melancholy') mel++;
-    else if (g.key==='passion')    pas++;
-  });
-  const unique = new Set(ems).size;
-  const gvMin = Math.min(...data.graph_value);
-  const gvMax = Math.max(...data.graph_value);
-  return [
-    Math.round((joy+love)/d*100),              // 明るさ
-    Math.min(Math.round(d/total*400), 100),    // 表現力
-    Math.round((gvMax-gvMin)/4*100),           // 感情の幅
-    Math.round((joy+pas)/d*100),               // 情熱度
-    Math.round((mel+pas)/d*100),               // 奥深さ
-    Math.round(unique/d*100),                  // 多彩さ
-  ];
-}
-
-function getStats(data) {
-  const ems = data.emotion_name.filter(e => e && e !== '-');
-  const tot = data.emotion_name.length;
-  const avg = (data.graph_value.reduce((a,b)=>a+b,0)/data.graph_value.length).toFixed(1);
-  const freq = {};
-  ems.forEach(e => { freq[e]=(freq[e]||0)+1; });
-  const top = Object.entries(freq).sort((a,b)=>b[1]-a[1])[0];
-  return {
-    dur: data.recog_times[data.recog_times.length-1],
-    tot, detected: ems.length,
-    rate: Math.round(ems.length/tot*100),
-    top: top ? `${top[0]}（${top[1]}回）` : '—',
-    avg,
-    type: classifyType(data).name,
-  };
-}
-
-// ==================== UPLOAD ====================
-function setupDrop(zoneId, inputId, suffix, onFile) {
-  const zone = document.getElementById(zoneId);
-  const inp  = document.getElementById(inputId);
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('over'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault(); zone.classList.remove('over');
-    if (e.dataTransfer.files[0]) onFile(e.dataTransfer.files[0], zone, suffix);
-  });
-  inp.addEventListener('change', () => { if (inp.files[0]) onFile(inp.files[0], zone, suffix); });
-}
-
-setupDrop('jsonZoneA', 'jsonInputA', 'A', (file, zone) => {
-  const r = new FileReader();
-  r.onload = e => {
-    try {
-      dataA = JSON.parse(e.target.result);
-      nameA = file.name.replace(/\.json$/i,'');
-      zone.classList.add('done-a');
-      document.getElementById('jsonLoadedA').textContent = '✓ ' + file.name;
-      renderAll();
-    } catch { alert('JSONの解析に失敗しました。'); }
-  };
-  r.readAsText(file);
-});
-setupDrop('jsonZoneB', 'jsonInputB', 'B', (file, zone) => {
-  const r=new FileReader(); r.onload=e=>{ try{ dataB=JSON.parse(e.target.result); nameB=file.name.replace(/\.json$/i,''); zone.classList.add('done-b'); document.getElementById('jsonLoadedB').textContent='✓ '+file.name; renderAll(); }catch(err){ alert('JSONの解析に失敗しました。'); } }; r.readAsText(file);
-});
-setupDrop('audioZoneA', 'audioInputA', 'A', (file, zone) => {
-  audioElA.src = URL.createObjectURL(file);
-  audioElA.load();
-  zone.classList.add('done-a');
-  document.getElementById('audioLoadedA').textContent = '✓ ' + file.name;
-  const btn = document.getElementById('playBtnA');
-  if (btn) { btn.disabled = false; }
-  renderAll();
-});
-setupDrop('audioZoneB', 'audioInputB', 'B', (file, zone) => {
-  audioElB.src = URL.createObjectURL(file);
-  audioElB.load();
-  zone.classList.add('done-b');
-  document.getElementById('audioLoadedB').textContent = '✓ ' + file.name;
-  const btn = document.getElementById('playBtnB');
-  if (btn) { btn.disabled = false; }
-  renderAll();
-});
-
-document.getElementById('lyricsPaste').addEventListener('input', e => {
-  lyricsData = parseLRC(e.target.value);
-  const cnt = document.getElementById('lyricsCount');
-  if (cnt) cnt.textContent = lyricsData.length ? `${lyricsData.length} 行を読み込みました` : '';
-  const row = document.getElementById('lyricsOffsetRow');
-  if (row) row.style.display = lyricsData.length ? 'flex' : 'none';
-  if (dataA) renderAll();
-});
-
-// ==================== RENDER ====================
-const PLAYHEAD = {
-  id: 'playhead',
-  afterDraw(chart) {
-    const times = chart._playTimes;
-    if (!times || times.length === 0) return;
-    const { ctx, chartArea, scales: { x } } = chart;
-    times.forEach(({ t, color }) => {
-      if (t <= 0) return;
-      const px = x.getPixelForValue(t);
-      if (px < chartArea.left || px > chartArea.right) return;
-      ctx.save();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4,3]);
-      ctx.beginPath();
-      ctx.moveTo(px, chartArea.top);
-      ctx.lineTo(px, chartArea.bottom);
-      ctx.stroke();
-      const label = fmt(t);
-      ctx.font = 'bold 10px sans-serif';
-      ctx.textAlign = 'center';
-      const tw = ctx.measureText(label).width + 8;
-      const lx = Math.max(chartArea.left + tw/2, Math.min(chartArea.right - tw/2, px));
-      ctx.fillStyle = `rgba(${hexRgb(color)},.2)`;
-      ctx.beginPath(); ctx.roundRect(lx-tw/2, chartArea.top-15, tw, 13, 3); ctx.fill();
-      ctx.fillStyle = color;
-      ctx.fillText(label, lx, chartArea.top - 4);
-      ctx.restore();
-    });
-  }
-};
-Chart.register(PLAYHEAD);
-
-const TENSION_MARKS = {
-  id: 'tensionMarks',
-  afterDraw(chart) {
-    const pts = chart._tensionPts;
-    if (!pts || pts.length === 0) return;
-    const { ctx, chartArea, scales: { x } } = chart;
-    pts.forEach(({ t, dir, bottom }) => {
-      const px = x.getPixelForValue(t);
-      if (px < chartArea.left || px > chartArea.right) return;
-      const py = bottom ? chartArea.bottom - 10 : chartArea.top + 10;
-      const up = bottom ? dir === 'down' : dir === 'up';
-      ctx.save();
-      ctx.font = 'bold 13px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.globalAlpha = 0.75;
-      ctx.fillStyle = up ? '#059669' : '#dc2626';
-      ctx.fillText(up ? '▲' : '▼', px, py);
-      ctx.restore();
-    });
-  }
-};
-Chart.register(TENSION_MARKS);
-
-// ==================== LYRICS ====================
-function parseLRC(text) {
-  const lines = [];
-  text.split('\n').forEach(line => {
-    const m = line.match(/\[(\d{2}):(\d{2})\.(\d{2,3})\]\s*(.*)/);
-    if (!m) return;
-    const t = parseInt(m[1])*60 + parseInt(m[2]) + parseInt(m[3])/100;
-    const lyric = m[4].trim();
-    if (lyric) lines.push({ t, lyric });
-  });
-  return lines.sort((a,b) => a.t - b.t);
-}
-
-function getLyricIdx(t) {
-  let idx = -1;
-  for (let i = 0; i < lyricsData.length; i++) {
-    if (lyricsData[i].t <= t) idx = i; else break;
-  }
-  return idx;
-}
-
-function adjustLyricsOffset(delta) {
-  lyricsOffset = Math.round((lyricsOffset + delta) * 10) / 10;
-  const el = document.getElementById('lyricsOffsetDisplay');
-  if (el) el.textContent = (lyricsOffset >= 0 ? '+' : '') + lyricsOffset.toFixed(1) + '秒';
-  const cur = lastActive === 'B' ? timeB : timeA;
-  updateLyricsDisplay(cur);
-}
-
-function updateLyricsDisplay(t) {
-  const panel = document.getElementById('lyricsDisplay');
-  if (!panel) return;
-  const idx = getLyricIdx(t - lyricsOffset);
-  document.getElementById('lyricPrev').textContent = idx > 0 ? lyricsData[idx-1].lyric : '';
-  document.getElementById('lyricCur').textContent  = idx >= 0 ? lyricsData[idx].lyric  : '';
-  document.getElementById('lyricNext').textContent = idx < lyricsData.length-1 ? lyricsData[idx+1].lyric : '';
-}
-
-window._loadData = (json, n) => { dataA = json; nameA = n || 'テスト'; renderAll(); };
-
-function renderAll() {
-  if (!dataA) return;
-  const dash = document.getElementById('dashboard');
-  dash.classList.add('on');
-  const isComp = !!(dataA && dataB);
-  dash.innerHTML = buildHTML(isComp);
-  const shareBtn = document.getElementById('shareBtn');
-  if (shareBtn) shareBtn.classList.add('visible');
-  setupPlayerUI('A', audioElA, dataA);
-  if (isComp) setupPlayerUI('B', audioElB, dataB);
-  attachTimeline(dataA, isComp ? dataB : null);
-  attachRadar(dataA, isComp ? dataB : null, isComp);
-  updateLyricsDisplay(0);
-}
-
-function buildHTML(isComp) {
-  const typeA = classifyType(dataA);
-  const statsA = getStats(dataA);
-  let top = '';
-  if (!isComp) {
-    top = `<div class="top-row-single gap">
-      ${typeCardHTML(typeA, nameA, '#111111')}
-      <div class="card">${singleStatsHTML(statsA)}</div>
-      <div class="card"><div class="card-title">歌唱レーダー</div><div class="radar-wrap"><canvas id="radarChart"></canvas></div></div>
+function render(items) {
+  const el = document.getElementById('gallery');
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🎵</div>
+      <p>まだ登録されていません。<br>下の手順で追加してください。</p>
     </div>`;
-  } else {
-    const typeB = classifyType(dataB);
-    const statsB = getStats(dataB);
-    top = `<div class="top-row-comp gap">
-      ${typeCardHTML(typeA, nameA, '#111111')}
-      <div class="card"><div class="card-title">歌唱タイプ比較レーダー</div><div class="radar-wrap"><canvas id="radarChart"></canvas></div></div>
-      ${typeCardHTML(typeB, nameB, '#6b7280')}
-    </div>
-    <div class="card gap">${compStatsHTML(statsA, statsB, typeA, typeB)}</div>`;
-  }
-
-  const legendComp = '';
-
-  const events = isComp
-    ? `<div class="events-comp">${eventsColHTML(dataA, nameA, '#111111', 'A')}${eventsColHTML(dataB, nameB, '#6b7280', 'B')}</div>`
-    : `<div class="events-grid">${getEvents(dataA).map(ev => chipHTML(ev, 'A')).join('')}</div>`;
-
-  const players = isComp
-    ? `<div class="players-row gap">${playerCardHTML('A','#111111',nameA)}${playerCardHTML('B','#6b7280',nameB)}</div>`
-    : `<div class="players-row single gap">${playerCardHTML('A','#111111',nameA)}</div>`;
-
-  const groupLegend = `
-      <div class="leg-item"><div class="leg-dot" style="background:#f59e0b"></div>喜び・高揚</div>
-      <div class="leg-item"><div class="leg-dot" style="background:#ec4899"></div>愛情・切なさ</div>
-      <div class="leg-item"><div class="leg-dot" style="background:#6366f1"></div>哀愁・深み</div>
-      <div class="leg-item"><div class="leg-dot" style="background:#ef4444"></div>激情・力強さ</div>
-      <div class="leg-item" style="margin-left:8px;color:var(--text3)">|</div>
-      <div class="leg-item"><span style="color:#059669;font-size:11px">▲</span> 急上昇</div>
-      <div class="leg-item"><span style="color:#dc2626;font-size:11px">▼</span> 急落下</div>`;
-
-  const timelineSection = isComp ? `
-    <div class="timeline-singer-label" style="margin-top:0">${nameA}</div>
-    <div class="chart-wrap chart-wrap-sm"><canvas id="timelineChartA"></canvas></div>
-    <div class="timeline-singer-label">${nameB}</div>
-    <div class="chart-wrap chart-wrap-sm"><canvas id="timelineChartB"></canvas></div>
-    <div class="legend-row" style="margin-top:10px">${groupLegend}</div>
-  ` : `
-    <div class="chart-wrap"><canvas id="timelineChart"></canvas></div>
-    <div class="legend-row">${groupLegend}</div>
-  `;
-
-  return `${top}
-  <div class="card gap">
-    <div class="timeline-header">
-      <span class="timeline-title">感情タイムライン</span>
-      <span class="timeline-hint">クリックでシーク再生</span>
-    </div>
-    ${timelineSection}
-  </div>
-  ${lyricsData.length ? `
-  <div id="lyricsDisplay" class="card gap lyrics-panel">
-    <div id="lyricPrev" class="lyric-ctx"></div>
-    <div id="lyricCur"  class="lyric-cur"></div>
-    <div id="lyricNext" class="lyric-ctx"></div>
-  </div>` : ''}
-  <div class="card gap">
-    <div class="card-title">検出された感情イベント（クリックでシーク）</div>
-    ${events}
-  </div>
-  ${players}`;
-}
-
-function typeCardHTML(type, label, lineColor) {
-  const rgb = hexRgb(type.color);
-  return `<div class="card">
-    <div class="card-title" style="color:${lineColor}">${label}</div>
-    <div class="type-wrap">
-      <div class="type-badge" style="background:rgba(${rgb},.15);color:${type.color};border:1px solid rgba(${rgb},.4)">歌唱タイプ</div>
-      <div class="type-icon">${type.icon}</div>
-      <div class="type-name" style="color:${type.color}">${type.name}</div>
-      <div class="type-desc">${type.desc}</div>
-      <div class="traits">${type.traits.map(t=>`<span class="trait" style="background:rgba(${rgb},.12);color:${type.color}">${t}</span>`).join('')}</div>
-    </div>
-  </div>`;
-}
-
-function singleStatsHTML(s) {
-  const rows = [
-    ['解析時間', fmt(s.dur)],
-    ['解析ポイント数', `${s.tot} ポイント（2秒おき）`],
-    ['感情検出数', `${s.detected} 件`],
-    ['感情移入度', `${s.rate}%`],
-    ['最多感情', s.top],
-    ['平均感情スコア', `${s.avg} ／ 5.0`],
-  ];
-  return `<div class="card-title">解析サマリー</div>` +
-    rows.map(([l,v])=>`<div class="stat-row"><span class="stat-label">${l}</span><span class="stat-val">${v}</span></div>`).join('');
-}
-
-function compStatsHTML(sA, sB, tA, tB) {
-  const rows = [
-    ['歌唱タイプ',    tA.name, tB.name],
-    ['解析時間',      fmt(sA.dur), fmt(sB.dur)],
-    ['感情検出数',    `${sA.detected}件`, `${sB.detected}件`],
-    ['感情移入度',    `${sA.rate}%`, `${sB.rate}%`],
-    ['最多感情',      sA.top, sB.top],
-    ['平均感情スコア',`${sA.avg}/5.0`, `${sB.avg}/5.0`],
-  ];
-  const labelCol = `<div class="comp-stats-col">
-    <div class="comp-stats-header" style="color:var(--text3)">—</div>
-    ${rows.map(r=>`<div class="comp-stat-row comp-stat-label">${r[0]}</div>`).join('')}
-  </div>`;
-  const aCol = `<div class="comp-stats-col">
-    <div class="comp-stats-header" style="color:#a78bfa">${nameA}</div>
-    ${rows.map(r=>`<div class="comp-stat-row">${r[1]}</div>`).join('')}
-  </div>`;
-  const bCol = `<div class="comp-stats-col">
-    <div class="comp-stats-header" style="color:#fbbf24">${nameB}</div>
-    ${rows.map(r=>`<div class="comp-stat-row">${r[2]}</div>`).join('')}
-  </div>`;
-  return `<div class="card-title">比較サマリー</div><div class="comp-stats-grid">${labelCol}${aCol}${bCol}</div>`;
-}
-
-function playerCardHTML(id, color, label) {
-  return `<div class="card">
-    <div class="player-file">
-      <span class="player-dot" style="background:${color}"></span>${label}
-    </div>
-    <div class="player-body">
-      <button class="play-btn" id="playBtn${id}" disabled style="background:linear-gradient(135deg,${color},${id==='A'?'#3f3f46':'#9ca3af'})">▶</button>
-      <div class="progress-wrap">
-        <div class="prog-bg" id="progBg${id}">
-          <div class="prog-fg" id="progFg${id}" style="background:linear-gradient(90deg,${color},${id==='A'?'#3f3f46':'#9ca3af'})"></div>
-        </div>
-        <div class="prog-times"><span id="timeCur${id}">0:00</span><span id="timeTot${id}">0:00</span></div>
-      </div>
-    </div>
-  </div>`;
-}
-
-function eventsColHTML(data, label, color, id) {
-  const evs = getEvents(data);
-  return `<div>
-    <div class="events-col-label" style="color:${color}">${label}</div>
-    <div class="events-grid">${evs.map(ev=>chipHTML(ev,id)).join('')}</div>
-  </div>`;
-}
-
-function getEvents(data) {
-  return data.recog_times
-    .map((t,i)=>({ t, e:data.emotion_name[i], pea:data.emotion_pea[i] }))
-    .filter(ev=>ev.e && ev.e!=='-');
-}
-
-function chipHTML(ev, id) {
-  const g = getGroup(ev.e);
-  const c = g?.color||'#475569', bg = g?.bg||'rgba(71,85,105,.14)', bd = g?.border||'rgba(71,85,105,.4)';
-  return `<span class="event-chip" style="background:${bg};color:${c};border-color:${bd}"
-    onclick="seekTo('${id}',${ev.t})">
-    ${ev.e}${ev.pea==='e'?' ★':''}<span class="event-time">${fmt(ev.t)}</span>
-  </span>`;
-}
-
-window.setTimelineFilter = (filter) => {
-  if (!charts.timeline) return;
-  charts.timeline.data.datasets.forEach(ds => {
-    if (filter === 'both') { ds.hidden = false; return; }
-    if (ds._singerIdx !== undefined) {
-      ds.hidden = ds._singerIdx !== (filter === 'A' ? 0 : 1);
-    }
-  });
-  charts.timeline.update();
-  document.querySelectorAll('.tgl-btn').forEach(b => b.classList.remove('act-both','act-a','act-b'));
-  const map = { both:'act-both', A:'act-a', B:'act-b' };
-  const ids = { both:'tglBoth', A:'tglA', B:'tglB' };
-  const el = document.getElementById(ids[filter]);
-  if (el) el.classList.add(map[filter]);
-};
-
-window.seekTo = (id, t) => {
-  const el = id === 'B' ? audioElB : audioElA;
-  lastActive = id;
-  if (el.src) { el.currentTime = Math.max(0, t-1); if (el.paused) el.play(); }
-};
-
-// ==================== RADAR ====================
-function attachRadar(dA, dB, isComp) {
-  const canvas = document.getElementById('radarChart');
-  if (!canvas) return;
-  const radA = computeRadar(dA);
-  const datasets = [
-    {
-      label: nameA,
-      data: radA,
-      borderColor: '#111111',
-      backgroundColor: 'rgba(17,17,17,.12)',
-      pointBackgroundColor: '#111111',
-      pointBorderColor: '#fff',
-      pointBorderWidth: 1,
-      borderWidth: 2,
-    }
-  ];
-  if (dB) {
-    datasets.push({
-      label: nameB,
-      data: computeRadar(dB),
-      borderColor: '#6b7280',
-      backgroundColor: 'rgba(107,114,128,.15)',
-      pointBackgroundColor: '#6b7280',
-      pointBorderColor: '#fff',
-      pointBorderWidth: 1,
-      borderWidth: 2,
-    });
-  }
-  mkChart('radar', canvas, {
-    type: 'radar',
-    data: { labels: RADAR_LABELS, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: {
-        r: {
-          min: 0, max: 100,
-          ticks: { display: false, stepSize: 25 },
-          grid: { color: 'rgba(30,42,59,.1)' },
-          angleLines: { color: 'rgba(30,42,59,.1)' },
-          pointLabels: { color: '#4b5a72', font: { size: isComp ? 13 : 14 } },
-        }
-      },
-      plugins: {
-        legend: { display: isComp, labels: { color: '#4b5a72', font: { size: 13 }, boxWidth: 12 } },
-        tooltip: {
-          backgroundColor: '#ffffff', borderColor: '#d8dce8', borderWidth: 1,
-          titleColor: '#1e2a3b', bodyColor: '#4b5a72',
-          callbacks: {
-            title: items => RADAR_LABELS[items[0].dataIndex],
-            label: item => `${item.dataset.label}: ${item.formattedValue}%  ${RADAR_DESC[item.dataIndex]}`,
-          }
-        }
-      }
-    }
-  });
-}
-
-// ==================== TIMELINE ====================
-function findTensionPts(data) {
-  const pts = [];
-  for (let i = 1; i < data.recog_times.length; i++) {
-    const delta = data.graph_value[i] - data.graph_value[i-1];
-    if (Math.abs(delta) >= 2) pts.push({ t: data.recog_times[i], dir: delta > 0 ? 'up' : 'down' });
-  }
-  return pts;
-}
-
-function mkGroupDatasets(data, thick) {
-  return Object.entries(GROUPS).map(([key, g]) => {
-    const pts = data.recog_times.map((t,i) => {
-      const e = data.emotion_name[i];
-      const grp = getGroup(e);
-      return (grp && grp.key===key) ? { x:t, y:data.graph_value[i], e, pea:data.emotion_pea[i] } : null;
-    }).filter(Boolean);
-    return {
-      label: g.label,
-      data: pts.map(p => ({ x:p.x, y:p.y })),
-      _pts: pts,
-      backgroundColor: g.color + 'aa',
-      borderColor: g.color,
-      borderWidth: 1,
-      borderRadius: 4,
-      barThickness: thick,
-    };
-  });
-}
-
-function buildTimelineChart(canvasId, data, maxT, playColor, thick, singerLabel) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return null;
-  const tension = findTensionPts(data);
-  const chartName = canvasId === 'timelineChart' ? 'timeline'
-    : canvasId === 'timelineChartA' ? 'timelineA' : 'timelineB';
-  const chart = mkChart(chartName, canvas, {
-    type: 'bar',
-    data: { datasets: mkGroupDatasets(data, thick) },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: {
-        x: { type:'linear', min:0, max:maxT+2,
-          title:{display:true, text:'時間 (秒)', color:'#8c9ab5', font:{size:13}},
-          grid:{color:'rgba(30,42,59,.06)'}, ticks:{color:'#8c9ab5', font:{size:13}} },
-        y: { min:0, max:6,
-          grid:{color:'rgba(30,42,59,.06)'},
-          ticks:{ color:'#8c9ab5', font:{size:12}, stepSize:1,
-            callback: v => ({1:'弱',3:'中',5:'最強'}[v]||'') } },
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor:'#ffffff', borderColor:'#d8dce8', borderWidth:1,
-          titleColor:'#1e2a3b', bodyColor:'#4b5a72',
-          callbacks: {
-            title: items => `${items[0].parsed.x} 秒`,
-            label: item => {
-              const pt = item.dataset._pts?.[item.dataIndex];
-              const g = getGroup(pt?.e);
-              if (!pt?.e) return '感情未検出';
-              return `${pt.e}${pt.pea==='e'?' ★':''} ／ ${g?.label||''}`;
-            }
-          }
-        }
-      }
-    }
-  });
-  chart._tensionPts = tension.map(p => ({ ...p, bottom: false }));
-  chart._playTimes  = [{ t: 0, color: playColor }];
-  canvas.addEventListener('click', ev => {
-    const rect = canvas.getBoundingClientRect();
-    const xVal = chart.scales.x.getValueForPixel(ev.clientX - rect.left);
-    if (xVal == null || xVal < 0) return;
-    const el = singerLabel === 'B' ? audioElB : audioElA;
-    if (el.src) { el.currentTime = Math.max(0, xVal); if (el.paused) el.play(); }
-  });
-  return chart;
-}
-
-function attachTimeline(dA, dB) {
-  // 既存インスタンスを全クリア
-  ['timeline','timelineA','timelineB'].forEach(k => {
-    if (charts[k]) { charts[k].destroy(); delete charts[k]; }
-  });
-
-  const maxT = Math.max(
-    dA.recog_times[dA.recog_times.length-1],
-    ...(dB ? [dB.recog_times[dB.recog_times.length-1]] : [])
-  );
-
-  if (!dB) {
-    buildTimelineChart('timelineChart', dA, maxT, '#111111', 14, 'A');
-  } else {
-    buildTimelineChart('timelineChartA', dA, maxT, '#111111', 10, 'A');
-    buildTimelineChart('timelineChartB', dB, maxT, '#6b7280', 10, 'B');
-  }
-}
-
-// ==================== PLAYER ====================
-function setupPlayerUI(id, el, data) {
-  const playBtn = document.getElementById(`playBtn${id}`);
-  const progBg  = document.getElementById(`progBg${id}`);
-  const progFg  = document.getElementById(`progFg${id}`);
-  const timeCur = document.getElementById(`timeCur${id}`);
-  const timeTot = document.getElementById(`timeTot${id}`);
-  if (!playBtn) return;
-
-  if (el.src) playBtn.disabled = false;
-
-  el.onloadedmetadata = () => { timeTot.textContent = fmt(el.duration); };
-  el.ontimeupdate = () => {
-    const cur = el.currentTime, dur = el.duration || 1;
-    progFg.style.width = (cur/dur*100)+'%';
-    timeCur.textContent = fmt(cur);
-    if (id === 'A') timeA = cur; else timeB = cur;
-    updateLyricsDisplay(lastActive === 'B' ? timeB : timeA);
-    if (charts.timeline) {
-      charts.timeline._playTimes = [{ t: timeA, color: '#111111' }];
-      charts.timeline.update('none');
-    }
-    if (charts.timelineA) {
-      charts.timelineA._playTimes = [{ t: timeA, color: '#111111' }];
-      charts.timelineA.update('none');
-    }
-    if (charts.timelineB) {
-      charts.timelineB._playTimes = [{ t: timeB, color: '#6b7280' }];
-      charts.timelineB.update('none');
-    }
-  };
-  el.onplay  = () => { lastActive = id; playBtn.textContent = '⏸'; };
-  el.onpause = () => { playBtn.textContent = '▶'; };
-  el.onended = () => { playBtn.textContent = '▶'; };
-
-  playBtn.onclick = () => { el.paused ? el.play() : el.pause(); };
-  progBg.onclick  = e => {
-    const rect = progBg.getBoundingClientRect();
-    el.currentTime = ((e.clientX-rect.left)/rect.width) * (el.duration||0);
-  };
-}
-
-// ==================== URL SHARE ====================
-async function loadFromUrl(url, namePrm) {
-  const overlay = document.getElementById('loadOverlay');
-  overlay.style.display = 'flex';
-  const tryFetch = u => fetch(u).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
-  try {
-    let json;
-    try { json = await tryFetch(url); }
-    catch { json = await tryFetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`); }
-    dataA = json;
-    nameA = namePrm || '歌手A';
-    renderAll();
-    const btn = document.getElementById('shareBtn');
-    if (btn) { btn.classList.add('visible'); btn.dataset.sourceUrl = url; }
-  } catch {
-    alert('データを読み込めませんでした。URLとGistの公開設定を確認してください。');
-  } finally {
-    overlay.style.display = 'none';
-  }
-}
-
-function generateShareUrl() {
-  const btn = document.getElementById('shareBtn');
-  const sourceUrl = btn && btn.dataset.sourceUrl;
-  if (!sourceUrl) {
-    alert('共有リンクを生成するには、まずJSONファイルをGitHub Gistに公開し、そのRaw URLを ?data= パラメータで開いてください。\n\n手順はダッシュボードの説明をご確認ください。');
     return;
   }
-  const share = `${location.origin}${location.pathname}?data=${encodeURIComponent(sourceUrl)}&name=${encodeURIComponent(nameA)}`;
-  navigator.clipboard.writeText(share).then(() => {
-    const orig = btn.textContent;
-    btn.textContent = '✓ コピーしました！';
-    setTimeout(() => btn.textContent = orig, 2000);
-  });
+  el.innerHTML = items.map(item => `
+    <a class="entry-card" href="dashboard.html?data=${encodeURIComponent(item.url)}&name=${encodeURIComponent(item.name)}">
+      <div class="entry-name">${esc(item.name)}</div>
+      <div class="entry-date">📅 ${esc(item.date)}</div>
+      ${item.note ? `<div class="entry-note">💬 ${esc(item.note)}</div>` : ''}
+      <div class="entry-arrow">分析を見る →</div>
+    </a>
+  `).join('');
 }
 
-// URLパラメータから自動読み込み
-(function() {
-  const p = new URLSearchParams(location.search);
-  const dataUrl = p.get('data');
-  if (dataUrl) {
-    const name = p.get('name') ? decodeURIComponent(p.get('name')) : '歌手A';
-    loadFromUrl(decodeURIComponent(dataUrl), name);
-  }
-})();
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
 </body>
 </html>
